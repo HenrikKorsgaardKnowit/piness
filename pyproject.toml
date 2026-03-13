@@ -1,0 +1,37 @@
+[project]
+name = "piness"
+version = "0.1.0"
+description = "Raspberry Pi e-ink display service for system info, graphs, and messages"
+requires-python = ">=3.11"
+dependencies = [
+    "Pillow",
+    "fastapi",
+    "uvicorn",
+    "psutil",
+    "python-dotenv",
+]
+
+[project.scripts]
+piness = "piness.main:main"
+
+[project.optional-dependencies]
+rpi = [
+    "inky[rpi]",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "httpx",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v"

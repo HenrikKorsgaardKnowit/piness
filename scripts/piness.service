@@ -1,0 +1,15 @@
+[Unit]
+Description=piness e-ink display service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piness
+ExecStart=/home/pi/piness/.venv/bin/python -m piness.main
+Restart=on-failure
+RestartSec=10
+Environment=MOCK_DISPLAY=false
+
+[Install]
+WantedBy=multi-user.target
