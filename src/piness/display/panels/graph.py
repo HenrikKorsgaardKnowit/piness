@@ -20,7 +20,7 @@ def render_graph(events: list[Event]) -> Image.Image:
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
     except OSError:
         font = ImageFont.load_default()
 

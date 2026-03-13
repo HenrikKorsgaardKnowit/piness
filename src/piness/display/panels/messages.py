@@ -7,7 +7,7 @@ from piness.store import Message
 PANEL_WIDTH = 400
 PANEL_HEIGHT = 100
 MARGIN = 10
-LINE_HEIGHT = 18
+LINE_HEIGHT = 20
 MAX_VISIBLE = 4
 
 
@@ -21,7 +21,7 @@ def render_messages(messages: list[Message]) -> Image.Image:
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
     except OSError:
         font = ImageFont.load_default()
 

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from PIL import Image
 
 try:
-    from inky import InkyWHAT
+    from inky.auto import auto as inky_auto
 
     HAS_INKY = True
 except ImportError:
@@ -31,7 +31,7 @@ class InkyDriver(DisplayDriver):
             raise RuntimeError(
                 "inky library not available — install with pip install inky[rpi]"
             )
-        self._display = InkyWHAT("black")
+        self._display = inky_auto()
 
     def show(self, image: Image.Image) -> None:
         self._display.set_image(image)
