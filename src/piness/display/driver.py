@@ -1,5 +1,6 @@
 """Display driver abstraction for e-ink and mock output."""
 
+import time
 from abc import ABC, abstractmethod
 from PIL import Image
 
@@ -26,12 +27,35 @@ class DisplayDriver(ABC):
 class InkyDriver(DisplayDriver):
     """Driver that renders to an InkyWHAT e-ink display."""
 
-    def __init__(self) -> None:
+    def __init__(self, spi_delay: float = 0.01) -> None:
         if not HAS_INKY:
             raise RuntimeError(
                 "inky library not available — install with pip install inky[rpi]"
             )
         self._display = inky_auto()
+        self._patch_spi_delay(spi_delay)
+
+    def _patch_spi_delay(self, delay: float) -> None:
+        """Monkey-patch the inky driver to use a shorter SPI command delay.
+
+        The stock jd79668 driver sleeps 300ms between every SPI command.
+        With ~16 commands per refresh, that's ~4.8s of wasted time.
+        """
+        display = self._display
+
+        def fast_send_command(command, data=None):
+            from gpiod.line import Value
+            display._gpio.set_value(display.cs_pin, Value.INACTIVE)
+            display._gpio.set_value(display.dc_pin, Value.INACTIVE)
+            time.sleep(delay)
+            display._spi_bus.xfer3([command])
+            if data is not None:
+                display._gpio.set_value(display.dc_pin, Value.ACTIVE)
+                display._spi_bus.xfer3(data)
+            display._gpio.set_value(display.cs_pin, Value.ACTIVE)
+            display._gpio.set_value(display.dc_pin, Value.INACTIVE)
+
+        display._send_command = fast_send_command
 
     def show(self, image: Image.Image) -> None:
         self._display.set_image(image)
