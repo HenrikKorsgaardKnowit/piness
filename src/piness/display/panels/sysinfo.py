@@ -5,7 +5,7 @@ import socket
 from PIL import Image, ImageDraw, ImageFont
 
 PANEL_WIDTH = 400
-PANEL_HEIGHT = 100
+PANEL_HEIGHT = 36
 
 
 def get_hostname() -> str:
@@ -26,7 +26,7 @@ def get_ip_address() -> str:
 def render_sysinfo(
     hostname: str | None = None, ip_address: str | None = None
 ) -> Image.Image:
-    """Return a Pillow Image with hostname and IP address."""
+    """Return a Pillow Image with hostname and IP on one line."""
     hostname = hostname if hostname is not None else get_hostname()
     ip_address = ip_address if ip_address is not None else get_ip_address()
 
@@ -34,11 +34,19 @@ def render_sysinfo(
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
     except OSError:
         font = ImageFont.load_default()
 
-    draw.text((10, 10), f"Host: {hostname}", fill="black", font=font)
-    draw.text((10, 40), f"IP:   {ip_address}", fill="black", font=font)
+    # Hostname left-aligned
+    draw.text((10, 4), hostname, fill="black", font=font)
+
+    # IP right-aligned
+    ip_bbox = draw.textbbox((0, 0), ip_address, font=font)
+    ip_width = ip_bbox[2] - ip_bbox[0]
+    draw.text((PANEL_WIDTH - 10 - ip_width, 4), ip_address, fill="black", font=font)
+
+    # Divider line at bottom
+    draw.line([(10, PANEL_HEIGHT - 1), (PANEL_WIDTH - 10, PANEL_HEIGHT - 1)], fill="black", width=1)
 
     return img

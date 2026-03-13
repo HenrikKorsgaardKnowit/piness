@@ -1,45 +1,55 @@
-"""Messages panel showing the most recent text messages."""
+"""Messages panel showing the most recent message."""
 
 from PIL import Image, ImageDraw, ImageFont
 
 from piness.store import Message
 
-PANEL_WIDTH = 400
-PANEL_HEIGHT = 100
-MARGIN = 10
-LINE_HEIGHT = 20
-MAX_VISIBLE = 4
+PANEL_WIDTH = 380
+PANEL_HEIGHT = 88
+MARGIN = 8
 
 
 def render_messages(messages: list[Message]) -> Image.Image:
-    """Return a Pillow Image with the most recent messages.
-
-    Shows up to MAX_VISIBLE messages, most recent first.
-    An empty list produces a blank panel with a placeholder label.
-    """
+    """Return a full-width Pillow Image with the most recent message (up to 140 chars)."""
     img = Image.new("RGB", (PANEL_WIDTH, PANEL_HEIGHT), "white")
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
     except OSError:
         font = ImageFont.load_default()
 
     if not messages:
-        draw.text(
-            (MARGIN, PANEL_HEIGHT // 2 - 8), "no messages", fill="black", font=font
-        )
+        draw.text((MARGIN, PANEL_HEIGHT // 2 - 10), "no messages", fill="black", font=font)
         return img
 
-    # Show newest first, limited to what fits
-    visible = messages[:MAX_VISIBLE]
-    for i, msg in enumerate(visible):
-        prefix = f"[{msg.source}] " if msg.source else ""
-        text = f"{prefix}{msg.text}"
-        # Truncate long lines
-        if len(text) > 50:
-            text = text[:47] + "..."
-        y = MARGIN + i * LINE_HEIGHT
-        draw.text((MARGIN, y), text, fill="black", font=font)
+    latest = messages[0]
+    prefix = f"[{latest.source}] " if latest.source else ""
+    text = f"{prefix}{latest.text}"
+    if len(text) > 140:
+        text = text[:137] + "..."
+
+    # Word wrap using pixel width
+    max_width = PANEL_WIDTH - 2 * MARGIN
+    lines = []
+    words = text.split()
+    current_line = ""
+    for word in words:
+        test = f"{current_line} {word}".strip()
+        test_bbox = draw.textbbox((0, 0), test, font=font)
+        if test_bbox[2] - test_bbox[0] <= max_width:
+            current_line = test
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+
+    for i, line in enumerate(lines):
+        y = MARGIN + i * 18
+        if y + 18 > PANEL_HEIGHT - 4:
+            break
+        draw.text((MARGIN, y), line, fill="black", font=font)
 
     return img

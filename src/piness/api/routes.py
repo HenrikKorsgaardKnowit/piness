@@ -21,6 +21,11 @@ class MessageIn(BaseModel):
 def create_router() -> APIRouter:
     router = APIRouter()
 
+    def _notify_refresh(request: Request) -> None:
+        scheduler = getattr(request.app.state, "refresh_scheduler", None)
+        if scheduler is not None:
+            scheduler.notify()
+
     @router.post("/events", status_code=201)
     async def post_event(body: EventIn, request: Request) -> dict:
         buf: EventBuffer = request.app.state.event_buffer
@@ -30,6 +35,7 @@ def create_router() -> APIRouter:
             label=body.label,
         )
         buf.append(event)
+        _notify_refresh(request)
         return {"status": "ok", "events_count": len(buf)}
 
     @router.post("/messages", status_code=201)
@@ -41,6 +47,7 @@ def create_router() -> APIRouter:
             source=body.source,
         )
         buf.append(message)
+        _notify_refresh(request)
         return {"status": "ok", "messages_count": len(buf)}
 
     @router.get("/status")
